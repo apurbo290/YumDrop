@@ -301,3 +301,18 @@ GET /api/recommendations/{userId}
 
 **Project Name:** YumDrop
 **Purpose:** Backend learning + interview-ready system design
+
+---
+Docker command:
+
+Pull MySQL Image: docker pull mysql:8.0
+Container:
+docker run -d \
+--name YumDrop-MySQL \
+-e MYSQL_ROOT_PASSWORD=root \
+-e MYSQL_ROOT_HOST=% \
+-e MYSQL_DATABASE=yumdrop \
+-p 3306:3306 \
+mysql:8.0
+
+
