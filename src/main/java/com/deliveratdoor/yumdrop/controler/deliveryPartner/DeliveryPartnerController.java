@@ -3,6 +3,7 @@ package com.deliveratdoor.yumdrop.controler.deliveryPartner;
 import com.deliveratdoor.yumdrop.dto.deliveryPartner.CreatePartnerRequest;
 import com.deliveratdoor.yumdrop.entity.deliveryPartner.DeliveryPartnerEntity;
 import com.deliveratdoor.yumdrop.service.deliveryPartner.DeliveryPartnerService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,7 +19,7 @@ public class DeliveryPartnerController {
     }
 
     @PostMapping
-    public DeliveryPartnerEntity create(@RequestBody CreatePartnerRequest request) {
+    public DeliveryPartnerEntity create(@Valid @RequestBody CreatePartnerRequest request) {
         return deliveryPartnerService.create(request);
     }
 
