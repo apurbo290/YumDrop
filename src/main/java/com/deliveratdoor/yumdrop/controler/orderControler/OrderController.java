@@ -1,5 +1,6 @@
 package com.deliveratdoor.yumdrop.controler.orderControler;
 
+import com.deliveratdoor.yumdrop.dto.order.CreateOrderRequest;
 import com.deliveratdoor.yumdrop.entity.order.OrderEntity;
 import com.deliveratdoor.yumdrop.service.orderService.OrderService;
 import org.springframework.http.HttpStatus;
@@ -18,7 +19,7 @@ public class OrderController {
     // User places order
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public OrderEntity placeOrder(@RequestBody OrderEntity order) {
+    public OrderEntity placeOrder(@RequestBody CreateOrderRequest order) {
         return orderService.placeOrder(order);
     }
 
@@ -38,6 +39,11 @@ public class OrderController {
     @PostMapping("/{orderId}/cancel")
     public OrderEntity cancelOrder(@PathVariable Long orderId) {
         return orderService.cancelOrder(orderId);
+    }
+
+    @GetMapping("/{orderId}")
+    public OrderEntity getOrder(@PathVariable Long orderId) {
+        return orderService.getOrder(orderId);
     }
 }
 

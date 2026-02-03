@@ -1,5 +1,5 @@
 Restaurants
------------------
+=====================
 POST - http://localhost:8084/api/restaurants
 {
 "name": "Spice Villa",
@@ -32,4 +32,28 @@ POST - http://localhost:8084/api/restaurants/{id}/menu
 ]
 ----
 GET - http://localhost:8084/api/restaurants/{id}/menu
------------------
+=====================
+
+
+Orders
+=====================
+POST - http://localhost:8084/api/orders
+{
+    "restaurantId": 1,
+    "userId": "user_123",
+    "deliveryAddress": "Flat 302, Green View Apartments, Whitefield, Bangalore",
+    "paymentMethod": "COD",
+    "items": [
+        {
+            "menuItemId": 1,
+            "quantity": 2
+        }
+    ]
+}
+----
+POST - http://localhost:8084/api/orders/{orderId}/accept
+POST - http://localhost:8084/api/orders/{orderId}/reject
+POST - http://localhost:8084/api/orders/{orderId}/cancel
+GET - http://localhost:8084/api/orders/{orderId}
+=====================
+
