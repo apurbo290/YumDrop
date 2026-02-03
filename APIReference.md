@@ -57,3 +57,32 @@ POST - http://localhost:8084/api/orders/{orderId}/cancel
 GET - http://localhost:8084/api/orders/{orderId}
 =====================
 
+Delivery
+=====================
+POST - http://localhost:8084/api/deliveries/assign?orderId={orderId}&deliveryPartnerId={partnerId}
+POST - http://localhost:8084/api/deliveries/{deliveryId}/status?status=ASSIGNED
+GET - http://localhost:8084/api/deliveries/order/{orderId}
+=====================
+
+Delivery Partners
+=====================
+POST - http://localhost:8084/api/partners
+{
+"name": "Rahul Sharma",
+"phone": "98765432013",
+"email": "rahul.sharma@example.com"
+}
+----
+PUT - http://localhost:8084/api/partners/{partnerId}/status
+{
+"status": "ON_DELIVERY"
+}
+----
+PUT - http://localhost:8084/api/partners/{partnerId}
+{
+"email" : "abc@gmail.com"
+}
+----
+GET - http://localhost:8084/api/partners/available
+GET - http://localhost:8084/api/partners/{partnerId}
+=====================
