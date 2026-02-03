@@ -1,5 +1,6 @@
 package com.deliveratdoor.yumdrop.entity.restaurant;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -28,6 +29,7 @@ public class RestaurantEntity {
 
     private double rating;
 
+    @JsonManagedReference
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL)
     private List<MenuEntity> menuItems = new ArrayList<>();
 }

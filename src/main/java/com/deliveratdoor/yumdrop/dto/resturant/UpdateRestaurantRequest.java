@@ -1,14 +1,11 @@
 package com.deliveratdoor.yumdrop.dto.resturant;
 
 import lombok.Data;
-import lombok.NonNull;
 
 @Data
-public class CreateRestaurantRequest {
-    @NonNull
+public class UpdateRestaurantRequest {
     private String name;
-    @NonNull
     private String address;
-    private boolean isOpen;
+    private Boolean isOpen;
+    private Double rating;
 }
-

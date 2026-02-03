@@ -2,6 +2,7 @@ package com.deliveratdoor.yumdrop.service.resturantService;
 
 import com.deliveratdoor.yumdrop.dto.resturant.CreateMenuItemRequest;
 import com.deliveratdoor.yumdrop.dto.resturant.CreateRestaurantRequest;
+import com.deliveratdoor.yumdrop.dto.resturant.UpdateRestaurantRequest;
 import com.deliveratdoor.yumdrop.entity.restaurant.MenuEntity;
 import com.deliveratdoor.yumdrop.entity.restaurant.RestaurantEntity;
 import com.deliveratdoor.yumdrop.repositories.resturant.MenuItemRepository;
@@ -9,7 +10,9 @@ import com.deliveratdoor.yumdrop.repositories.resturant.RestaurantRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +31,16 @@ public class RestaurantService {
         return restaurantRepository.save(restaurant);
     }
 
+    public RestaurantEntity updateRestaurant(UpdateRestaurantRequest request, Long id) {
+        RestaurantEntity updatedRestaurant = getRestaurant(id);
+        if (Objects.nonNull(request.getName())) updatedRestaurant.setName(request.getName());
+        if (Objects.nonNull(request.getAddress())) updatedRestaurant.setAddress(request.getAddress());
+        if (Objects.nonNull(request.getIsOpen())) updatedRestaurant.setOpen(request.getIsOpen());
+        if (Objects.nonNull(request.getRating())) updatedRestaurant.setRating(request.getRating());
+
+        return restaurantRepository.save(updatedRestaurant);
+    }
+
     public List<RestaurantEntity> getAllRestaurants() {
         return restaurantRepository.findAll();
     }
@@ -37,17 +50,22 @@ public class RestaurantService {
                 .orElseThrow(() -> new RuntimeException("Restaurant not found"));
     }
 
-    public MenuEntity addMenuItem(Long restaurantId, CreateMenuItemRequest request) {
+    public List<MenuEntity> addMenuItem(Long restaurantId, List<CreateMenuItemRequest> requests) {
 
         RestaurantEntity restaurant = getRestaurant(restaurantId);
 
-        MenuEntity item = new MenuEntity();
-        item.setName(request.getName());
-        item.setPrice(request.getPrice());
-        item.setAvailable(request.isAvailable());
-        item.setRestaurant(restaurant);
+        List<MenuEntity> allAddedMenu = new ArrayList<>();
 
-        return menuItemRepository.save(item);
+        requests.forEach(request -> {
+            MenuEntity item = new MenuEntity();
+            item.setName(request.getName());
+            item.setPrice(request.getPrice());
+            item.setAvailable(request.isAvailable());
+            item.setRestaurant(restaurant);
+            allAddedMenu.add(item);
+        });
+
+        return menuItemRepository.saveAll(allAddedMenu);
     }
 
     public List<MenuEntity> getMenu(Long restaurantId) {
