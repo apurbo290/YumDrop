@@ -4,6 +4,7 @@ import com.deliveratdoor.yumdrop.dto.deliveryPartner.CreatePartnerRequest;
 import com.deliveratdoor.yumdrop.entity.deliveryPartner.DeliveryPartnerEntity;
 import com.deliveratdoor.yumdrop.service.deliveryPartner.DeliveryPartnerService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -45,6 +46,12 @@ public class DeliveryPartnerController {
     @GetMapping("/{id}")
     public DeliveryPartnerEntity getById(@PathVariable Long id) {
         return deliveryPartnerService.getById(id);
+    }
+
+    @DeleteMapping()
+    @ResponseStatus(HttpStatus.OK)
+    public void deleteDeliveryPartnerById(@PathVariable Long id) {
+        deliveryPartnerService.delete(id);
     }
 }
 

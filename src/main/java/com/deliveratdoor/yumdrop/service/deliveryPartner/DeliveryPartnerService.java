@@ -48,4 +48,9 @@ public class DeliveryPartnerService {
         return repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Partner not found"));
     }
+
+    public void delete(Long id) {
+        DeliveryPartnerEntity partner = getById(id);
+        repository.delete(partner);
+    }
 }

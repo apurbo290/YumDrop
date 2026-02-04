@@ -1,4 +1,4 @@
-Restaurants
+1. Restaurants
 =====================
 POST - http://localhost:8084/api/restaurants
 {
@@ -35,7 +35,7 @@ GET - http://localhost:8084/api/restaurants/{id}/menu
 =====================
 
 
-Orders
+2. Orders
 =====================
 POST - http://localhost:8084/api/orders
 {
@@ -57,14 +57,14 @@ POST - http://localhost:8084/api/orders/{orderId}/cancel
 GET - http://localhost:8084/api/orders/{orderId}
 =====================
 
-Delivery
+3. Delivery
 =====================
 POST - http://localhost:8084/api/deliveries/assign?orderId={orderId}&deliveryPartnerId={partnerId}
 POST - http://localhost:8084/api/deliveries/{deliveryId}/status?status=ASSIGNED
 GET - http://localhost:8084/api/deliveries/order/{orderId}
 =====================
 
-Delivery Partners
+4. Delivery Partners
 =====================
 POST - http://localhost:8084/api/partners
 {
@@ -86,3 +86,21 @@ PUT - http://localhost:8084/api/partners/{partnerId}
 GET - http://localhost:8084/api/partners/available
 GET - http://localhost:8084/api/partners/{partnerId}
 =====================
+
+5. Feedback
+=====================
+POST - http://localhost:8084/api/feedback
+   {
+   "orderId": 12345,
+   "userId": 987,
+   "restaurantId": 55,
+   "deliveryPartnerId": 21,
+   "restaurantRating": 5,
+   "deliveryRating": 4,
+   "comments": "Food was tasty and delivery was on time."
+   }
+GET - http://localhost:8084/api/feedback/order/{orderId}
+=====================
+
+
+

@@ -5,6 +5,7 @@ import com.deliveratdoor.yumdrop.dto.resturant.CreateRestaurantRequest;
 import com.deliveratdoor.yumdrop.dto.resturant.UpdateRestaurantRequest;
 import com.deliveratdoor.yumdrop.entity.restaurant.MenuEntity;
 import com.deliveratdoor.yumdrop.entity.restaurant.RestaurantEntity;
+import com.deliveratdoor.yumdrop.exception.ResourceNotFoundException;
 import com.deliveratdoor.yumdrop.repositories.resturant.MenuItemRepository;
 import com.deliveratdoor.yumdrop.repositories.resturant.RestaurantRepository;
 import lombok.RequiredArgsConstructor;
@@ -47,7 +48,15 @@ public class RestaurantService {
 
     public RestaurantEntity getRestaurant(Long id) {
         return restaurantRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Restaurant not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found"));
+    }
+
+    public void deleteRestaurantById(Long id) {
+        restaurantRepository.delete(
+                restaurantRepository.findById(id)
+                        .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found"))
+        );
+
     }
 
     public List<MenuEntity> addMenuItem(Long restaurantId, List<CreateMenuItemRequest> requests) {

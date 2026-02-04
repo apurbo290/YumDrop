@@ -1,7 +1,9 @@
 package com.deliveratdoor.yumdrop.controler.feedbackControler;
 
+import com.deliveratdoor.yumdrop.dto.feedback.CreateFeedbackRequest;
 import com.deliveratdoor.yumdrop.entity.feedback.FeedbackEntity;
 import com.deliveratdoor.yumdrop.service.feedbackService.FeedbackService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,7 +20,7 @@ public class FeedbackController {
     // Submit feedback (user)
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public FeedbackEntity submitFeedback(@RequestBody FeedbackEntity feedback) {
+    public FeedbackEntity submitFeedback(@Valid @RequestBody CreateFeedbackRequest feedback) {
         return feedbackService.submitFeedback(feedback);
     }
 

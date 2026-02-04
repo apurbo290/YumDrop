@@ -7,7 +7,10 @@ import java.time.LocalDateTime;
 
 @Entity
 @Data
-@Table(name = "feedbacks")
+@Table(name = "feedbacks",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = "orderId")
+        })
 public class FeedbackEntity {
 
     @Id
@@ -22,6 +25,7 @@ public class FeedbackEntity {
     private Integer restaurantRating; // 1–5
     private Integer deliveryRating;   // 1–5
 
+    @Column(length = 100)
     private String comments;
 
     private LocalDateTime createdAt;
