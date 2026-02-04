@@ -4,7 +4,12 @@ import com.deliveratdoor.yumdrop.dto.order.CreateOrderRequest;
 import com.deliveratdoor.yumdrop.entity.order.OrderEntity;
 import com.deliveratdoor.yumdrop.service.orderService.OrderService;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -19,7 +24,15 @@ public class OrderController {
     // User places order
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public OrderEntity placeOrder(@RequestBody CreateOrderRequest order) {
+    @PreAuthorize("hasRole('USER')")
+    public OrderEntity placeOrder(@RequestBody CreateOrderRequest order,
+                                  @AuthenticationPrincipal String userId) {
+
+//        String userId = Objects.requireNonNull(SecurityContextHolder.getContext()
+//                        .getAuthentication())
+//                        .getName();
+        order.setUserId(userId);
+
         return orderService.placeOrder(order);
     }
 
@@ -42,6 +55,7 @@ public class OrderController {
     }
 
     @GetMapping("/{orderId}")
+    @PreAuthorize("hasRole('USER', 'SUPPORT', 'ADMIN')")
     public OrderEntity getOrder(@PathVariable Long orderId) {
         return orderService.getOrder(orderId);
     }

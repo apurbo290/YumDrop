@@ -102,5 +102,28 @@ POST - http://localhost:8084/api/feedback
 GET - http://localhost:8084/api/feedback/order/{orderId}
 =====================
 
+6. User
+=====================
+POST - http://localhost:8084/api/auth/register
+   {
+   "firstName": "Ramesh4",
+   "lastName": "Kumar",
+   "username": "ramesh123",
+   "phoneNumber": "9876543210",
+   "email": "ramesh4@example.com",
+   "password": "strongPass123",
+   "role" : "USER"
+   }
+----
+PUT - http://localhost:8084/api/auth/users/{userId}
+{
+"role" : "ADMIN"
+}
+----
+POST - http://localhost:8084/api/auth/login
+{
+"email": "<email address>",
+"password": "<your password>"
+}
 
 
