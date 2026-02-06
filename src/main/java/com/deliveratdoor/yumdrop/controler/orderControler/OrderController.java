@@ -6,10 +6,8 @@ import com.deliveratdoor.yumdrop.service.orderService.OrderService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -27,12 +25,7 @@ public class OrderController {
     @PreAuthorize("hasRole('USER')")
     public OrderEntity placeOrder(@RequestBody CreateOrderRequest order,
                                   @AuthenticationPrincipal String userId) {
-
-//        String userId = Objects.requireNonNull(SecurityContextHolder.getContext()
-//                        .getAuthentication())
-//                        .getName();
         order.setUserId(userId);
-
         return orderService.placeOrder(order);
     }
 

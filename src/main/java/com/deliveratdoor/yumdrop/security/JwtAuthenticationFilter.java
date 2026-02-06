@@ -1,6 +1,6 @@
 package com.deliveratdoor.yumdrop.security;
 
-import com.deliveratdoor.yumdrop.util.JwtUtil;
+import com.deliveratdoor.yumdrop.util.auth.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,7 +15,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.apache.logging.log4j.util.Strings.isBlank;
 

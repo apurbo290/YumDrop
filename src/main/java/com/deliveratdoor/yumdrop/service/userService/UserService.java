@@ -6,9 +6,8 @@ import com.deliveratdoor.yumdrop.dto.user.RegisterUserRequest;
 import com.deliveratdoor.yumdrop.dto.user.UpdateUserRequest;
 import com.deliveratdoor.yumdrop.entity.user.UserEntity;
 import com.deliveratdoor.yumdrop.exception.ResourceNotFoundException;
-import com.deliveratdoor.yumdrop.model.user.UserRole;
 import com.deliveratdoor.yumdrop.repositories.user.UserRepository;
-import com.deliveratdoor.yumdrop.util.JwtUtil;
+import com.deliveratdoor.yumdrop.util.auth.JwtUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 

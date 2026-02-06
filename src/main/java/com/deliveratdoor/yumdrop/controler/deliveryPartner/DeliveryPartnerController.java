@@ -1,15 +1,18 @@
 package com.deliveratdoor.yumdrop.controler.deliveryPartner;
 
+import com.deliveratdoor.yumdrop.common.pagination.PageResponse;
+import com.deliveratdoor.yumdrop.common.pagination.PaginationRequest;
 import com.deliveratdoor.yumdrop.dto.deliveryPartner.CreatePartnerRequest;
+import com.deliveratdoor.yumdrop.dto.deliveryPartner.DeliveryPartnerResponse;
 import com.deliveratdoor.yumdrop.entity.deliveryPartner.DeliveryPartnerEntity;
 import com.deliveratdoor.yumdrop.service.deliveryPartner.DeliveryPartnerService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
+@PreAuthorize("hasRole('ADMIN')")
 @RequestMapping("/api/partners")
 public class DeliveryPartnerController {
 
@@ -39,8 +42,8 @@ public class DeliveryPartnerController {
     }
 
     @GetMapping("/available")
-    public List<DeliveryPartnerEntity> availablePartners() {
-        return deliveryPartnerService.getAvailablePartners();
+    public PageResponse<DeliveryPartnerResponse> availablePartners(@ModelAttribute PaginationRequest request) {
+        return deliveryPartnerService.getAvailablePartners(request);
     }
 
     @GetMapping("/{id}")

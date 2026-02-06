@@ -2,6 +2,8 @@ package com.deliveratdoor.yumdrop.repositories.deliveryPartner;
 
 import com.deliveratdoor.yumdrop.entity.deliveryPartner.DeliveryPartnerEntity;
 import com.deliveratdoor.yumdrop.model.PartnerStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -9,5 +11,6 @@ import java.util.List;
 public interface DeliveryPartnerRepository extends JpaRepository<DeliveryPartnerEntity, Long> {
 
     List<DeliveryPartnerEntity> findByStatusAndActiveTrue(PartnerStatus status);
+    Page<DeliveryPartnerEntity> findByStatusAndActiveTrue(PartnerStatus status, Pageable pageable);
 }
 
