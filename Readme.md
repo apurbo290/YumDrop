@@ -315,4 +315,14 @@ docker run -d \
 -p 3306:3306 \
 mysql:8.0
 
+Pull Redis Image: docker pull redis:latest
+Container:
+docker run -d \
+--name YumDrop-Redis \
+-p 6379:6379 \
+redis:latest
+
+
+
+
 
