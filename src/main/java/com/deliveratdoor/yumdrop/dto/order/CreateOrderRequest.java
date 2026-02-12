@@ -1,5 +1,6 @@
 package com.deliveratdoor.yumdrop.dto.order;
 
+import com.deliveratdoor.yumdrop.model.PaymentMethod;
 import lombok.Data;
 
 import java.util.List;
@@ -9,7 +10,7 @@ public class CreateOrderRequest {
     private Long restaurantId;
     private List<OrderItemRequest> items;
     private String deliveryAddress;
-    private String paymentMethod;
+    private PaymentMethod paymentMethod;
     private String userId;
 }
 

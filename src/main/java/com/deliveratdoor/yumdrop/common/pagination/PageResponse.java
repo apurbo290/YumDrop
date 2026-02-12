@@ -11,7 +11,7 @@ public class PageResponse<T> {
     // Offset metadata
     private Integer page;
     private Integer size;
-    private Long totalElements;
+    private Long totalRecords;
     private Integer totalPages;
 
     // For Cursor based pagination

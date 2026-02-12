@@ -1,6 +1,8 @@
 package com.deliveratdoor.yumdrop.entity.order;
 
+import com.deliveratdoor.yumdrop.entity.restaurant.RestaurantEntity;
 import com.deliveratdoor.yumdrop.model.OrderStatus;
+import com.deliveratdoor.yumdrop.model.PaymentMethod;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -21,8 +23,9 @@ public class OrderEntity {
     @Column(nullable = false)
     private String userId;
 
-    @Column(nullable = false)
-    private Long restaurantId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "restaurant_id", nullable = false)
+    private RestaurantEntity restaurant;
 
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
@@ -31,6 +34,10 @@ public class OrderEntity {
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    private String deliveryAddress;
+
+    private PaymentMethod paymentMethod;
 
     @OneToMany(
             mappedBy = "order",

@@ -42,6 +42,7 @@ public class DeliveryPartnerController {
     }
 
     @GetMapping("/available")
+    @PreAuthorize("hasRole('ADMIN')")
     public PageResponse<DeliveryPartnerResponse> availablePartners(@ModelAttribute PaginationRequest request) {
         return deliveryPartnerService.getAvailablePartners(request);
     }

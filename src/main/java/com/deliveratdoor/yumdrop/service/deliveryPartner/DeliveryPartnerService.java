@@ -14,7 +14,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
 
@@ -68,7 +67,7 @@ public class DeliveryPartnerService {
         return PageResponse.<DeliveryPartnerResponse>builder()
                 .page(page.getNumber())
                 .size(page.getSize())
-                .totalElements(page.getTotalElements())
+                .totalRecords(page.getTotalElements())
                 .totalPages(page.getTotalPages())
                 .hasNext(page.hasNext())
                 .data(data)

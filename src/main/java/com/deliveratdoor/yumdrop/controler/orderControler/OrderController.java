@@ -1,6 +1,9 @@
 package com.deliveratdoor.yumdrop.controler.orderControler;
 
+import com.deliveratdoor.yumdrop.common.pagination.PageResponse;
+import com.deliveratdoor.yumdrop.common.pagination.PaginationRequest;
 import com.deliveratdoor.yumdrop.dto.order.CreateOrderRequest;
+import com.deliveratdoor.yumdrop.dto.order.OrderResponse;
 import com.deliveratdoor.yumdrop.entity.order.OrderEntity;
 import com.deliveratdoor.yumdrop.service.orderService.OrderService;
 import org.springframework.http.HttpStatus;
@@ -27,6 +30,14 @@ public class OrderController {
                                   @AuthenticationPrincipal String userId) {
         order.setUserId(userId);
         return orderService.placeOrder(order);
+    }
+
+    @GetMapping
+    @PreAuthorize("hasRole('USER', 'ADMIN')")
+    public PageResponse<OrderResponse> getAllOrdersForCurrentUser(
+            @ModelAttribute PaginationRequest request,
+            @AuthenticationPrincipal String userId) {
+        return orderService.getAllOrdersForCurrentUser(request, userId);
     }
 
     // Restaurant accepts order
