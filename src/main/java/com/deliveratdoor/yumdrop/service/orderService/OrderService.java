@@ -8,6 +8,8 @@ import com.deliveratdoor.yumdrop.dto.order.OrderResponse;
 import com.deliveratdoor.yumdrop.entity.order.OrderEntity;
 import com.deliveratdoor.yumdrop.entity.order.OrderItemEntity;
 import com.deliveratdoor.yumdrop.entity.restaurant.MenuEntity;
+import com.deliveratdoor.yumdrop.messaging.event.OrderAcceptedEvent;
+import com.deliveratdoor.yumdrop.messaging.producer.OrderEventProducer;
 import com.deliveratdoor.yumdrop.model.OrderStatus;
 import com.deliveratdoor.yumdrop.repositories.orders.OrderRepository;
 import com.deliveratdoor.yumdrop.repositories.resturant.MenuItemRepository;
@@ -15,6 +17,7 @@ import com.deliveratdoor.yumdrop.repositories.resturant.RestaurantRepository;
 import com.deliveratdoor.yumdrop.util.orders.OrderUtil;
 import com.deliveratdoor.yumdrop.util.pagination.PaginationUtil;
 import jakarta.transaction.Transactional;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -29,11 +32,16 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final MenuItemRepository menuRepository;
     private final RestaurantRepository restaurantRepository;
+    private final OrderEventProducer orderEventProducer;
 
-    public OrderService(OrderRepository orderRepository, MenuItemRepository menuRepository, RestaurantRepository restaurantRepository) {
+    public OrderService(OrderRepository orderRepository,
+                        MenuItemRepository menuRepository,
+                        RestaurantRepository restaurantRepository,
+                        OrderEventProducer orderEventProducer) {
         this.orderRepository = orderRepository;
         this.menuRepository = menuRepository;
         this.restaurantRepository = restaurantRepository;
+        this.orderEventProducer = orderEventProducer;
     }
 
     @Transactional
@@ -97,7 +105,16 @@ public class OrderService {
         OrderEntity order = getOrder(orderId);
         validateStatus(order, OrderStatus.PLACED);
         order.setStatus(OrderStatus.ACCEPTED);
-        return orderRepository.save(order);
+
+        OrderEntity savedOrder = orderRepository.save(order);
+
+        orderEventProducer.publishOrderAccepted(
+                OrderAcceptedEvent.builder()
+                        .orderId(savedOrder.getId())
+                        .userId(savedOrder.getUserId())
+                        .build()
+        );
+        return savedOrder;
     }
 
     public OrderEntity rejectOrder(Long orderId) {
