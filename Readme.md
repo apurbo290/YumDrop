@@ -30,8 +30,8 @@ POST /api/auth/register
 
 ```json
 {
-  "name": "Apurba",
-  "email": "apurba@gmail.com",
+  "name": "",
+  "email": "demo@gmail.com",
   "password": "secret",
   "role": "CUSTOMER"
 }
