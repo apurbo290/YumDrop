@@ -22,6 +22,9 @@ import java.util.Locale;
 
 import static org.apache.logging.log4j.util.Strings.isBlank;
 
+/**
+ * A filter for handling JWT authentication in HTTP requests.
+ */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
