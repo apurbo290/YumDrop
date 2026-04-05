@@ -1,14 +1,14 @@
 package com.deliveratdoor.yumdrop.dto.resturant;
 
-import jakarta.validation.constraints.NotBlank;
+import lombok.Builder;
 import lombok.Data;
 
 @Data
-public class CreateRestaurantRequest {
-    @NotBlank
+@Builder
+public class RestaurantResponse {
+    private Long id;
     private String name;
-    @NotBlank
     private String address;
     private boolean isOpen;
+    private double rating;
 }
-

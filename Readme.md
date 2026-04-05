@@ -1,62 +1,87 @@
-# 🍽️ YumDrop – Backend API Documentation
+# 🍽️ YumDrop – Backend API
 
-YumDrop is a food delivery backend system inspired by platforms like Zomato and Swiggy. This project is built **for learning purposes**, focusing on real-world backend architecture using **Java, Spring Boot, SQL, MongoDB, Redis, and Kafka**.
-
----
-
-## 🧱 Architecture Overview
-
-**Style:** Modular Monolith (can be split into microservices later)
-
-**Databases Used:**
-
-* PostgreSQL / MySQL – transactional data
-* MongoDB – search, notifications, analytics
-* Redis – caching & delivery partner availability
+YumDrop is a food delivery backend system inspired by platforms like Zomato and Swiggy. Built as an **interview-ready, production-pattern** backend using Java and Spring Boot.
 
 ---
 
-## 🔐 Authentication & User Service
+## ⚙️ Tech Stack
+
+| Layer     | Technology                  |
+|-----------|-----------------------------|
+| Language  | Java 25                     |
+| Framework | Spring Boot 4.x             |
+| Auth      | Spring Security + JWT       |
+| DB        | MySQL 8                     |
+| Cache     | Redis                       |
+| Messaging | RabbitMQ                    |
+| API Docs  | Swagger / OpenAPI (SpringDoc)|
+| Container | Docker / Docker Compose     |
+
+---
+
+## 🧱 Architecture
+
+**Style:** Modular Monolith
+
+```
+User → JWT Auth → Rate Limiter (Redis) → Controller → Service → Repository (MySQL)
+                                                    ↓
+                                              RabbitMQ (async events)
+                                                    ↓
+                                           Notification Consumer
+```
+
+---
+
+## 🚀 Running Locally
+
+### 1. Start infrastructure
+
+```bash
+docker compose up -d
+```
+
+This starts MySQL (3306), Redis (6379), and RabbitMQ (5672 / management UI at 15672).
+
+### 2. Run the app
+
+```bash
+./mvnw spring-boot:run
+```
+
+App starts on **http://localhost:8084**
+
+### 3. Swagger UI
+
+```
+http://localhost:8084/swagger-ui/index.html
+```
+
+---
+
+## 🔐 Auth & User Service
 
 **Base Path:** `/api/auth`
 
-### Register User
+| Method | Endpoint | Role | Description |
+|--------|----------|------|-------------|
+| POST | `/api/auth/register` | Public | Register a new user |
+| POST | `/api/auth/login` | Public | Login, returns access + refresh token |
+| POST | `/api/auth/refresh` | Public | Rotate refresh token |
+| GET | `/api/auth/users/{id}` | ADMIN or self | Get user profile |
+| PUT | `/api/auth/users/{id}` | ADMIN or self | Update user |
 
-```
-POST /api/auth/register
-```
+**Roles:** `USER`, `ADMIN`, `SUPPORT`, `DELIVERY_PARTNER`, `RESTAURANT_OWNER`
 
-**Request Body**
-
+**Login response:**
 ```json
 {
-  "name": "",
-  "email": "demo@gmail.com",
-  "password": "secret",
-  "role": "CUSTOMER"
+  "accessToken": "<jwt>",
+  "refreshToken": "<uuid>"
 }
 ```
 
-### Login
-
-```
-POST /api/auth/login
-```
-
-**Response**
-
-```json
-{
-  "accessToken": "jwt-token",
-  "refreshToken": "jwt-token"
-}
-```
-
-### Get Logged-in User
-
-```
-GET /api/users/me
-```
+**Refresh token:** 7-day expiry, rotated on every use (old token is revoked).
 
 ---
 
@@ -64,76 +89,18 @@ GET /api/users/me
 
 **Base Path:** `/api/restaurants`
 
-### Create Restaurant
+| Method | Endpoint | Role | Description |
+|--------|----------|------|-------------|
+| POST | `/api/restaurants` | ADMIN | Create restaurant |
+| PUT | `/api/restaurants/{id}` | ADMIN | Update restaurant |
+| PATCH | `/api/restaurants/{id}/status` | ADMIN | Toggle open/closed |
+| GET | `/api/restaurants` | Public | List all restaurants |
+| GET | `/api/restaurants/{id}` | Public | Get restaurant by ID |
+| DELETE | `/api/restaurants/{id}` | ADMIN | Delete restaurant |
+| POST | `/api/restaurants/{id}/menu` | ADMIN | Add menu items (bulk) |
+| GET | `/api/restaurants/{id}/menu` | Public | Get menu |
 
-```
-POST /api/restaurants
-```
-
-```json
-{
-  "name": "Spice Villa",
-  "address": "Bangalore",
-  "isOpen": true,
-  "rating": 4.5
-}
-```
-
-### Get All Restaurants
-
-```
-GET /api/restaurants
-```
-
-### Get Restaurant By ID
-
-```
-GET /api/restaurants/{restaurantId}
-```
-
-### Add Menu Item
-
-```
-POST /api/restaurants/{restaurantId}/menu
-```
-
-```json
-{
-  "name": "Paneer Butter Masala",
-  "price": 250,
-  "available": true
-}
-```
-
-### Get Restaurant Menu
-
-```
-GET /api/restaurants/{restaurantId}/menu
-```
-
----
-
-## 🔍 Search & Discovery Service (MongoDB)
-
-**Base Path:** `/api/search`
-
-### Search Restaurants
-
-```
-GET /api/search/restaurants
-```
-
-**Query Params (optional)**
-
-* `keyword`
-* `cuisine`
-* `openOnly=true`
-
-Example:
-
-```
-/api/search/restaurants?keyword=spice&openOnly=true
-```
+> Rating is **computed automatically** from feedback — it cannot be set manually.
 
 ---
 
@@ -141,196 +108,127 @@ Example:
 
 **Base Path:** `/api/orders`
 
-### Place Order
+| Method | Endpoint | Role | Description |
+|--------|----------|------|-------------|
+| POST | `/api/orders` | USER | Place an order |
+| GET | `/api/orders` | USER, ADMIN | Get current user's orders (paginated) |
+| GET | `/api/orders/{orderId}` | USER, SUPPORT, ADMIN | Get order by ID |
+| GET | `/api/orders/{orderId}/history` | USER, SUPPORT, ADMIN | Full status audit trail |
+| POST | `/api/orders/{orderId}/accept` | RESTAURANT_OWNER | Accept order |
+| POST | `/api/orders/{orderId}/reject` | RESTAURANT_OWNER | Reject order |
+| POST | `/api/orders/{orderId}/cancel` | USER | Cancel order |
 
+**Order status flow:**
 ```
-POST /api/orders
-```
-
-```json
-{
-  "restaurantId": 1,
-  "items": [
-    { "menuItemId": 10, "quantity": 2 },
-    { "menuItemId": 12, "quantity": 1 }
-  ]
-}
-```
-
-### Get Order By ID
-
-```
-GET /api/orders/{orderId}
+PLACED → ACCEPTED → DISPATCHED → DELIVERED
+       ↘ REJECTED
+       ↘ CANCELLED (from PLACED or ACCEPTED)
+                    ↘ ACCEPTED (if delivery FAILED, re-dispatchable)
 ```
 
-### Get Orders By User
-
-```
-GET /api/orders/user/{userId}
-```
-
-### Update Order Status
-
-```
-PATCH /api/orders/{orderId}/status
-```
-
-```json
-{
-  "status": "OUT_FOR_DELIVERY"
-}
-```
-
-**Order Status Flow**
-
-```
-PLACED → ACCEPTED → PREPARING → OUT_FOR_DELIVERY → DELIVERED
-```
+Every transition is recorded in `order_status_history` with `fromStatus`, `toStatus`, `changedBy`, and `changedAt`.
 
 ---
 
-## 💳 Payment Service (Mock)
+## 🚚 Delivery Service
 
-**Base Path:** `/api/payments`
+**Base Path:** `/api/deliveries`
 
-### Initiate Payment
+| Method | Endpoint | Role | Description |
+|--------|----------|------|-------------|
+| POST | `/api/deliveries/assign?orderId=&deliveryPartnerId=` | ADMIN | Assign partner to order |
+| POST | `/api/deliveries/{deliveryId}/status?status=` | DELIVERY_PARTNER | Update delivery status |
+| GET | `/api/deliveries/order/{orderId}` | USER, ADMIN, DELIVERY_PARTNER | Track delivery |
 
+**Delivery status flow:**
 ```
-POST /api/payments/initiate
-```
-
-```json
-{
-  "orderId": 101,
-  "amount": 520,
-  "method": "UPI",
-  "idempotencyKey": "abc-123"
-}
+ASSIGNED → PICKED_UP → DELIVERED
+                     ↘ FAILED
 ```
 
-### Payment Callback (Mock)
+**Auto side-effects on status change:**
 
-```
-POST /api/payments/callback
-```
+| Delivery event | Order status synced to | Partner status synced to |
+|---|---|---|
+| Assigned | `DISPATCHED` | `ON_DELIVERY` |
+| Delivered | `DELIVERED` | `AVAILABLE` |
+| Failed | `ACCEPTED` | `AVAILABLE` |
 
 ---
 
-## 🚚 Dispatch & Logistics Service
+## 👷 Delivery Partner Service
 
-**Base Path:** `/api/dispatch`
+**Base Path:** `/api/partners` — all endpoints require `ADMIN`
 
-### Assign Delivery Partner
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/partners` | Register partner |
+| PUT | `/api/partners/{id}` | Update partner details |
+| PUT | `/api/partners/{id}/status` | Update partner status |
+| GET | `/api/partners/available` | List available partners (paginated) |
+| GET | `/api/partners/{id}` | Get partner by ID |
+| DELETE | `/api/partners/{id}` | Delete partner |
 
-```
-POST /api/dispatch/assign/{orderId}
-```
-
-### Track Delivery
-
-```
-GET /api/dispatch/track/{orderId}
-```
-
----
-
-## 🔔 Notification Service (Kafka + MongoDB)
-
-**Base Path:** `/api/notifications`
-
-### Get User Notifications
-
-```
-GET /api/notifications/{userId}
-```
-
-Notification types:
-
-* ORDER_PLACED
-* ORDER_STATUS_UPDATED
-* PAYMENT_SUCCESS
+**Partner statuses:** `AVAILABLE`, `ON_DELIVERY`, `OFFLINE`
 
 ---
 
-## 📊 Recommendation & Analytics Service (Future)
+## ⭐ Feedback Service
 
-**Base Path:** `/api/recommendations`
+**Base Path:** `/api/feedback`
 
-### Get Recommendations
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/feedback` | Submit feedback (one per order) |
+| GET | `/api/feedback/order/{orderId}` | Get feedback for an order |
 
-```
-GET /api/recommendations/{userId}
-```
-
----
-
-## ⚙️ Tech Stack Summary
-
-| Layer     | Technology            |
-| --------- | --------------------- |
-| Language  | Java 17               |
-| Framework | Spring Boot 3.x       |
-| Auth      | Spring Security + JWT |
-| DB        | PostgreSQL / MySQL    |
-| NoSQL     | MongoDB               |
-| Cache     | Redis                 |
-| Messaging | Kafka                 |
-| API Docs  | Swagger / OpenAPI     |
-| Container | Docker                |
+- Restaurant and delivery partner rated 1–5
+- Submitting feedback **automatically recomputes** the restaurant's average rating
 
 ---
 
-## 🚀 Learning Goals
+## 🔔 Notification Service
 
-* Clean REST API design
-* Polyglot persistence (SQL + Mongo)
-* Event-driven architecture
-* Transaction & idempotency handling
-* Scalable backend patterns
+Event-driven via RabbitMQ. When an order is accepted, a message is published to `order.exchange` and consumed by `OrderEventListener`, which triggers an email notification (currently logged — pluggable with real email provider).
+
+---
+
+## 🛡️ Security
+
+- Stateless JWT authentication (no sessions)
+- Sliding window rate limiter via Redis — 100 requests / 60 seconds per user
+- `@PreAuthorize` role-based access on all sensitive endpoints
+- Passwords hashed with BCrypt
+- Refresh token rotation — old token revoked on every refresh
 
 ---
 
 ## 🧠 Roadmap
 
-* OAuth2 login (Google)
-* Elasticsearch integration
-* Real payment gateway
-* Kubernetes deployment
+- Payment service (mock → real gateway)
+- Idempotency key on order placement
+- `@Cacheable` on restaurant/menu reads (Redis)
+- Soft delete for restaurants and partners
+- Order status RabbitMQ events for all transitions
+- OAuth2 login (Google)
+- Kubernetes deployment
 
 ---
 
-**Project Name:** YumDrop
-**Purpose:** Backend learning + interview-ready system design
+## 📁 Project Structure
 
----
-Docker command:
-
-Pull MySQL Image: docker pull mysql:8.0
-Container:
-docker run -d \
---name YumDrop-MySQL \
--e MYSQL_ROOT_PASSWORD=root \
--e MYSQL_ROOT_HOST=% \
--e MYSQL_DATABASE=yumdrop \
--p 3306:3306 \
-mysql:8.0
-
-Pull Redis Image: docker pull redis:latest
-Container:
-docker run -d \
---name YumDrop-Redis \
--p 6379:6379 \
-redis:latest
-
-RabbitMQ container
-docker run -d \
---name YumDrop-RabbitMQ \
--p 5672:5672 \
--p 15672:15672 \
-rabbitmq:3-management
-
-
-
-
-
-
+```
+src/main/java/com/deliveratdoor/yumdrop/
+├── config/          # Security, RabbitMQ, Redis, Swagger
+├── controler/       # REST controllers
+├── dto/             # Request / Response DTOs
+├── entity/          # JPA entities
+├── exception/       # Custom exceptions + GlobalExceptionHandler
+├── messaging/       # RabbitMQ producer & consumer
+├── model/           # Enums (OrderStatus, DeliveryStatus, etc.)
+├── rateLimit/       # Sliding window rate limiter
+├── repositories/    # Spring Data JPA repositories
+├── security/        # JwtAuthenticationFilter
+├── service/         # Business logic
+└── util/            # JwtUtil, mappers, pagination
+```

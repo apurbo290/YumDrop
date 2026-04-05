@@ -4,12 +4,14 @@ import com.deliveratdoor.yumdrop.common.pagination.PageResponse;
 import com.deliveratdoor.yumdrop.common.pagination.PaginationRequest;
 import com.deliveratdoor.yumdrop.dto.deliveryPartner.CreatePartnerRequest;
 import com.deliveratdoor.yumdrop.dto.deliveryPartner.DeliveryPartnerResponse;
-import com.deliveratdoor.yumdrop.entity.deliveryPartner.DeliveryPartnerEntity;
 import com.deliveratdoor.yumdrop.service.deliveryPartner.DeliveryPartnerService;
+import com.deliveratdoor.yumdrop.util.deliveryPartner.DeliveryPartnerUtil;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @PreAuthorize("hasRole('ADMIN')")
@@ -23,39 +25,37 @@ public class DeliveryPartnerController {
     }
 
     @PostMapping
-    public DeliveryPartnerEntity create(@Valid @RequestBody CreatePartnerRequest request) {
-        return deliveryPartnerService.create(request);
+    public DeliveryPartnerResponse create(@Valid @RequestBody CreatePartnerRequest request) {
+        return DeliveryPartnerUtil.mapToDto(List.of(deliveryPartnerService.create(request))).getFirst();
     }
 
     @PutMapping("/{id}")
-    public DeliveryPartnerEntity update(
+    public DeliveryPartnerResponse update(
             @RequestBody CreatePartnerRequest request,
             @PathVariable Long id) {
-        return deliveryPartnerService.update(id, request);
+        return DeliveryPartnerUtil.mapToDto(List.of(deliveryPartnerService.update(id, request))).getFirst();
     }
 
     @PutMapping("/{id}/status")
-    public DeliveryPartnerEntity updateStatus(
+    public DeliveryPartnerResponse updateStatus(
             @PathVariable Long id,
             @RequestBody CreatePartnerRequest request) {
-        return deliveryPartnerService.update(id, request);
+        return DeliveryPartnerUtil.mapToDto(List.of(deliveryPartnerService.update(id, request))).getFirst();
     }
 
     @GetMapping("/available")
-    @PreAuthorize("hasRole('ADMIN')")
     public PageResponse<DeliveryPartnerResponse> availablePartners(@ModelAttribute PaginationRequest request) {
         return deliveryPartnerService.getAvailablePartners(request);
     }
 
     @GetMapping("/{id}")
-    public DeliveryPartnerEntity getById(@PathVariable Long id) {
-        return deliveryPartnerService.getById(id);
+    public DeliveryPartnerResponse getById(@PathVariable Long id) {
+        return DeliveryPartnerUtil.mapToDto(List.of(deliveryPartnerService.getById(id))).getFirst();
     }
 
-    @DeleteMapping()
-    @ResponseStatus(HttpStatus.OK)
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteDeliveryPartnerById(@PathVariable Long id) {
         deliveryPartnerService.delete(id);
     }
 }
-

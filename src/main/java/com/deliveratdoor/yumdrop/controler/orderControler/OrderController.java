@@ -4,13 +4,16 @@ import com.deliveratdoor.yumdrop.common.pagination.PageResponse;
 import com.deliveratdoor.yumdrop.common.pagination.PaginationRequest;
 import com.deliveratdoor.yumdrop.dto.order.CreateOrderRequest;
 import com.deliveratdoor.yumdrop.dto.order.OrderResponse;
-import com.deliveratdoor.yumdrop.entity.order.OrderEntity;
+import com.deliveratdoor.yumdrop.dto.order.OrderStatusHistoryResponse;
 import com.deliveratdoor.yumdrop.service.orderService.OrderService;
+import com.deliveratdoor.yumdrop.util.orders.OrderUtil;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -22,46 +25,51 @@ public class OrderController {
         this.orderService = orderService;
     }
 
-    // User places order
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('USER')")
-    public OrderEntity placeOrder(@RequestBody CreateOrderRequest order,
-                                  @AuthenticationPrincipal String userId) {
+    public OrderResponse placeOrder(@Valid @RequestBody CreateOrderRequest order,
+                                    @AuthenticationPrincipal String userId) {
         order.setUserId(userId);
-        return orderService.placeOrder(order);
+        return OrderUtil.mapToDto(List.of(orderService.placeOrder(order))).getFirst();
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('USER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public PageResponse<OrderResponse> getAllOrdersForCurrentUser(
             @ModelAttribute PaginationRequest request,
             @AuthenticationPrincipal String userId) {
         return orderService.getAllOrdersForCurrentUser(request, userId);
     }
 
-    // Restaurant accepts order
     @PostMapping("/{orderId}/accept")
-    public OrderEntity acceptOrder(@PathVariable Long orderId) {
-        return orderService.acceptOrder(orderId);
+    @PreAuthorize("hasRole('RESTAURANT_OWNER')")
+    public OrderResponse acceptOrder(@PathVariable Long orderId) {
+        return OrderUtil.mapToDto(List.of(orderService.acceptOrder(orderId))).getFirst();
     }
 
-    // Restaurant rejects order
     @PostMapping("/{orderId}/reject")
-    public OrderEntity rejectOrder(@PathVariable Long orderId) {
-        return orderService.rejectOrder(orderId);
+    @PreAuthorize("hasRole('RESTAURANT_OWNER')")
+    public OrderResponse rejectOrder(@PathVariable Long orderId) {
+        return OrderUtil.mapToDto(List.of(orderService.rejectOrder(orderId))).getFirst();
     }
 
-    // User cancels order
     @PostMapping("/{orderId}/cancel")
-    public OrderEntity cancelOrder(@PathVariable Long orderId) {
-        return orderService.cancelOrder(orderId);
+    @PreAuthorize("hasRole('USER')")
+    public OrderResponse cancelOrder(@PathVariable Long orderId) {
+        return OrderUtil.mapToDto(List.of(orderService.cancelOrder(orderId))).getFirst();
     }
 
     @GetMapping("/{orderId}")
-    @PreAuthorize("hasRole('USER', 'SUPPORT', 'ADMIN')")
-    public OrderEntity getOrder(@PathVariable Long orderId) {
-        return orderService.getOrder(orderId);
+    @PreAuthorize("hasAnyRole('USER', 'SUPPORT', 'ADMIN')")
+    public OrderResponse getOrder(@PathVariable Long orderId) {
+        return OrderUtil.mapToDto(List.of(orderService.getOrder(orderId))).getFirst();
+    }
+
+    @GetMapping("/{orderId}/history")
+    @PreAuthorize("hasAnyRole('USER', 'SUPPORT', 'ADMIN')")
+    public List<OrderStatusHistoryResponse> getOrderHistory(@PathVariable Long orderId) {
+        return orderService.getOrderHistory(orderId);
     }
 }
 

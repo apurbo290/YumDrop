@@ -6,6 +6,7 @@ import com.deliveratdoor.yumdrop.dto.resturant.UpdateRestaurantRequest;
 import com.deliveratdoor.yumdrop.entity.restaurant.MenuEntity;
 import com.deliveratdoor.yumdrop.entity.restaurant.RestaurantEntity;
 import com.deliveratdoor.yumdrop.exception.ResourceNotFoundException;
+import com.deliveratdoor.yumdrop.repositories.feedback.FeedbackRepository;
 import com.deliveratdoor.yumdrop.repositories.resturant.MenuItemRepository;
 import com.deliveratdoor.yumdrop.repositories.resturant.RestaurantRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ public class RestaurantService {
 
     private final RestaurantRepository restaurantRepository;
     private final MenuItemRepository menuItemRepository;
+    private final FeedbackRepository feedbackRepository;
 
     public RestaurantEntity createRestaurant(CreateRestaurantRequest request) {
         RestaurantEntity restaurant = new RestaurantEntity();
@@ -28,18 +30,28 @@ public class RestaurantService {
         restaurant.setAddress(request.getAddress());
         restaurant.setOpen(request.isOpen());
         restaurant.setRating(0.0);
-
         return restaurantRepository.save(restaurant);
     }
 
     public RestaurantEntity updateRestaurant(UpdateRestaurantRequest request, Long id) {
-        RestaurantEntity updatedRestaurant = getRestaurant(id);
-        if (Objects.nonNull(request.getName())) updatedRestaurant.setName(request.getName());
-        if (Objects.nonNull(request.getAddress())) updatedRestaurant.setAddress(request.getAddress());
-        if (Objects.nonNull(request.getIsOpen())) updatedRestaurant.setOpen(request.getIsOpen());
-        if (Objects.nonNull(request.getRating())) updatedRestaurant.setRating(request.getRating());
+        RestaurantEntity restaurant = getRestaurant(id);
+        if (Objects.nonNull(request.getName())) restaurant.setName(request.getName());
+        if (Objects.nonNull(request.getAddress())) restaurant.setAddress(request.getAddress());
+        if (Objects.nonNull(request.getIsOpen())) restaurant.setOpen(request.getIsOpen());
+        return restaurantRepository.save(restaurant);
+    }
 
-        return restaurantRepository.save(updatedRestaurant);
+    // Point 10: rating computed from feedback, not manually set
+    public RestaurantEntity recomputeRating(Long restaurantId) {
+        RestaurantEntity restaurant = getRestaurant(restaurantId);
+        double avg = feedbackRepository.findByRestaurantId(restaurantId)
+                .stream()
+                .filter(f -> f.getRestaurantRating() != null)
+                .mapToInt(f -> f.getRestaurantRating())
+                .average()
+                .orElse(0.0);
+        restaurant.setRating(avg);
+        return restaurantRepository.save(restaurant);
     }
 
     public List<RestaurantEntity> getAllRestaurants() {
@@ -56,15 +68,11 @@ public class RestaurantService {
                 restaurantRepository.findById(id)
                         .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found"))
         );
-
     }
 
     public List<MenuEntity> addMenuItem(Long restaurantId, List<CreateMenuItemRequest> requests) {
-
         RestaurantEntity restaurant = getRestaurant(restaurantId);
-
         List<MenuEntity> allAddedMenu = new ArrayList<>();
-
         requests.forEach(request -> {
             MenuEntity item = new MenuEntity();
             item.setName(request.getName());
@@ -73,7 +81,6 @@ public class RestaurantService {
             item.setRestaurant(restaurant);
             allAddedMenu.add(item);
         });
-
         return menuItemRepository.saveAll(allAddedMenu);
     }
 

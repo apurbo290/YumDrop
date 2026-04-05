@@ -10,10 +10,12 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Component
 public class JwtUtil {
@@ -21,13 +23,17 @@ public class JwtUtil {
     @Getter
     private final String secret;
     private final long expiry;
+    @Getter
+    private final long refreshExpiry;
 
     public JwtUtil(
             @Value("${jwt.secret}") String secret,
-            @Value("${jwt.expiry}") long expiry
+            @Value("${jwt.expiry}") long expiry,
+            @Value("${jwt.refresh-expiry}") long refreshExpiry
     ) {
         this.secret = secret;
         this.expiry = expiry;
+        this.refreshExpiry = refreshExpiry;
     }
 
     private SecretKey getSigningKey() {
@@ -36,8 +42,6 @@ public class JwtUtil {
 
     public String generateToken(UserEntity user) {
         Map<String, Object> extraClaims = new HashMap<>();
-
-        // Puts the user roles into the JWT payload
         extraClaims.put("roles", user.getRole());
 
         return Jwts.builder()
@@ -45,8 +49,16 @@ public class JwtUtil {
                 .claims(extraClaims)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiry))
-                .signWith(getSigningKey()) // HS256
+                .signWith(getSigningKey())
                 .compact();
+    }
+
+    public String generateRefreshToken() {
+        return UUID.randomUUID().toString();
+    }
+
+    public Instant refreshTokenExpiresAt() {
+        return Instant.now().plusMillis(refreshExpiry);
     }
 
     public Long extractUserId(String token) {
@@ -68,7 +80,6 @@ public class JwtUtil {
                 .getPayload();
         return List.of(claims.get("roles", String.class));
     }
-
 }
 
 

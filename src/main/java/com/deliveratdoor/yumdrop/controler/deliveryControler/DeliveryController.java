@@ -1,8 +1,10 @@
 package com.deliveratdoor.yumdrop.controler.deliveryControler;
 
+import com.deliveratdoor.yumdrop.dto.delivery.DeliveryResponse;
 import com.deliveratdoor.yumdrop.entity.delivery.DeliveryEntity;
 import com.deliveratdoor.yumdrop.model.DeliveryStatus;
 import com.deliveratdoor.yumdrop.service.deliveryService.DeliveryService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,28 +17,37 @@ public class DeliveryController {
         this.deliveryService = deliveryService;
     }
 
-    // Assign delivery partner to order
     @PostMapping("/assign")
-    public DeliveryEntity assignDelivery(
+    @PreAuthorize("hasRole('ADMIN')")
+    public DeliveryResponse assignDelivery(
             @RequestParam Long orderId,
             @RequestParam Long deliveryPartnerId) {
-
-        return deliveryService.assignDelivery(orderId, deliveryPartnerId);
+        return toDto(deliveryService.assignDelivery(orderId, deliveryPartnerId));
     }
 
-    // Update delivery status
     @PostMapping("/{deliveryId}/status")
-    public DeliveryEntity updateStatus(
+    @PreAuthorize("hasRole('DELIVERY_PARTNER')")
+    public DeliveryResponse updateStatus(
             @PathVariable Long deliveryId,
             @RequestParam DeliveryStatus status) {
-
-        return deliveryService.updateStatus(deliveryId, status);
+        return toDto(deliveryService.updateStatus(deliveryId, status));
     }
 
-    // Get delivery by order
     @GetMapping("/order/{orderId}")
-    public DeliveryEntity getDeliveryByOrder(@PathVariable Long orderId) {
-        return deliveryService.getByOrderId(orderId);
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'DELIVERY_PARTNER')")
+    public DeliveryResponse getDeliveryByOrder(@PathVariable Long orderId) {
+        return toDto(deliveryService.getByOrderId(orderId));
+    }
+
+    private DeliveryResponse toDto(DeliveryEntity e) {
+        return DeliveryResponse.builder()
+                .id(e.getId())
+                .orderId(e.getOrderId())
+                .deliveryPartnerId(e.getDeliveryPartnerId())
+                .status(e.getStatus())
+                .assignedAt(e.getAssignedAt())
+                .updatedAt(e.getUpdatedAt())
+                .build();
     }
 }
 

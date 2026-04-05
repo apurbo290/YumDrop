@@ -1,23 +1,14 @@
 package com.deliveratdoor.yumdrop.controler.resturantControler;
 
-import com.deliveratdoor.yumdrop.dto.resturant.CreateMenuItemRequest;
-import com.deliveratdoor.yumdrop.dto.resturant.CreateRestaurantRequest;
-import com.deliveratdoor.yumdrop.dto.resturant.UpdateRestaurantRequest;
+import com.deliveratdoor.yumdrop.dto.resturant.*;
 import com.deliveratdoor.yumdrop.entity.restaurant.MenuEntity;
 import com.deliveratdoor.yumdrop.entity.restaurant.RestaurantEntity;
 import com.deliveratdoor.yumdrop.service.resturantService.RestaurantService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -29,48 +20,71 @@ public class RestaurantController {
     private final RestaurantService restaurantService;
 
     @PostMapping
-    public RestaurantEntity createRestaurant(
-            @RequestBody CreateRestaurantRequest request) {
-        return restaurantService.createRestaurant(request);
+    @PreAuthorize("hasRole('ADMIN')")
+    public RestaurantResponse createRestaurant(@Valid @RequestBody CreateRestaurantRequest request) {
+        return toDto(restaurantService.createRestaurant(request));
     }
 
     @PutMapping("/{id}")
-    public RestaurantEntity updateRestaurant(
-            @RequestBody UpdateRestaurantRequest request, @PathVariable Long id) {
-        return restaurantService.updateRestaurant(request, id);
+    @PreAuthorize("hasRole('ADMIN')")
+    public RestaurantResponse updateRestaurant(
+            @Valid @RequestBody UpdateRestaurantRequest request, @PathVariable Long id) {
+        return toDto(restaurantService.updateRestaurant(request, id));
     }
 
     @PatchMapping("/{id}/status")
-    public RestaurantEntity updateRestaurantStatus(
-            @RequestBody UpdateRestaurantRequest request, @PathVariable Long id) {
-        return restaurantService.updateRestaurant(request, id);
+    @PreAuthorize("hasRole('ADMIN')")
+    public RestaurantResponse updateRestaurantStatus(
+            @Valid @RequestBody UpdateRestaurantRequest request, @PathVariable Long id) {
+        return toDto(restaurantService.updateRestaurant(request, id));
     }
 
     @GetMapping
-    public List<RestaurantEntity> getAllRestaurants() {
-        return restaurantService.getAllRestaurants();
+    public List<RestaurantResponse> getAllRestaurants() {
+        return restaurantService.getAllRestaurants().stream().map(this::toDto).toList();
     }
 
     @GetMapping("/{id}")
-    public RestaurantEntity getRestaurant(@PathVariable Long id) {
-        return restaurantService.getRestaurant(id);
+    public RestaurantResponse getRestaurant(@PathVariable Long id) {
+        return toDto(restaurantService.getRestaurant(id));
     }
 
     @PostMapping("/{id}/menu")
-    public List<MenuEntity> addMenuItem(
-            @PathVariable Long id, @RequestBody List<CreateMenuItemRequest> request) {
-        return restaurantService.addMenuItem(id, request);
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<MenuItemResponse> addMenuItem(
+            @PathVariable Long id, @Valid @RequestBody List<CreateMenuItemRequest> request) {
+        return restaurantService.addMenuItem(id, request).stream().map(this::toMenuDto).toList();
     }
 
     @GetMapping("/{id}/menu")
-    public List<MenuEntity> getMenu(@PathVariable Long id) {
-        return restaurantService.getMenu(id);
+    public List<MenuItemResponse> getMenu(@PathVariable Long id) {
+        return restaurantService.getMenu(id).stream().map(this::toMenuDto).toList();
     }
 
-    @DeleteMapping()
-    @ResponseStatus(HttpStatus.OK)
-    public void deleteRestaurantById(@PathVariable Long id) {
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteRestaurantById(@PathVariable Long id) {  // fixed: was missing @PathVariable
         restaurantService.deleteRestaurantById(id);
+    }
+
+    private RestaurantResponse toDto(RestaurantEntity e) {
+        return RestaurantResponse.builder()
+                .id(e.getId())
+                .name(e.getName())
+                .address(e.getAddress())
+                .isOpen(e.isOpen())
+                .rating(e.getRating())
+                .build();
+    }
+
+    private MenuItemResponse toMenuDto(MenuEntity e) {
+        return MenuItemResponse.builder()
+                .id(e.getId())
+                .name(e.getName())
+                .price(e.getPrice())
+                .available(e.isAvailable())
+                .build();
     }
 }
 

@@ -25,7 +25,7 @@ public class OrderUtil {
                             .deliveryAddress(eachOrder.getDeliveryAddress())
                             .paymentMethod(Objects.nonNull(eachOrder.getPaymentMethod())
                                     ? eachOrder.getPaymentMethod().name() : null)
-                            // .orderStatus()
+                            .orderStatus(eachOrder.getStatus() != null ? eachOrder.getStatus().name() : null)
                             .orderAmount(eachOrder.getTotalAmount())
                             .build();
                 })

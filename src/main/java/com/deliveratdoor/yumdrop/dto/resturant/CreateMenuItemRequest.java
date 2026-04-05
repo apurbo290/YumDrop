@@ -1,11 +1,14 @@
 package com.deliveratdoor.yumdrop.dto.resturant;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 import lombok.Data;
-import lombok.NonNull;
 
 @Data
 public class CreateMenuItemRequest {
-    @NonNull private String name;
+    @NotBlank
+    private String name;
+    @Positive
     private double price;
     private boolean isAvailable;
 }

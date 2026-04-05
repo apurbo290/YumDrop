@@ -1,129 +1,324 @@
-1. Restaurants
-=====================
-POST - http://localhost:8084/api/restaurants
+# YumDrop – API Reference
+
+Base URL: `http://localhost:8084`
+All secured endpoints require: `Authorization: Bearer <accessToken>`
+
+---
+
+## 1. Auth & User
+
+### Register
+```
+POST /api/auth/register
+```
+```json
 {
-"name": "Spice Villa",
-"address": "MG Road, Bangalore",
-"isOpen": true
+  "firstName": "Ramesh",
+  "lastName": "Kumar",
+  "username": "ramesh123",
+  "phoneNumber": "9876543210",
+  "email": "ramesh@example.com",
+  "password": "strongPass123",
+  "role": "USER"
 }
-----
-PATCH - http://localhost:8084/api/restaurants/{id}/status
+```
+Roles: `USER` | `ADMIN` | `SUPPORT` | `DELIVERY_PARTNER` | `RESTAURANT_OWNER`
+
+---
+
+### Login
+```
+POST /api/auth/login
+```
+```json
 {
-"isOpen": false
+  "email": "ramesh@example.com",
+  "password": "strongPass123"
 }
-----
-PUT - http://localhost:8084/api/restaurants/{id}
+```
+Response:
+```json
 {
-"name": "Spice Villa",
-"address": "MG Road, Pune",
-"isOpen": true
+  "accessToken": "<jwt>",
+  "refreshToken": "<uuid>"
 }
-----
-GET - http://localhost:8084/api/restaurants
-GET - http://localhost:8084/api/restaurants/{id}
-----
-POST - http://localhost:8084/api/restaurants/{id}/menu
+```
+
+---
+
+### Refresh Token
+```
+POST /api/auth/refresh
+```
+```json
+{
+  "refreshToken": "<uuid>"
+}
+```
+Returns a new `accessToken` + rotated `refreshToken`. Old refresh token is revoked.
+
+---
+
+### Get User  `🔒 ADMIN or self`
+```
+GET /api/auth/users/{id}
+```
+
+### Update User  `🔒 ADMIN or self`
+```
+PUT /api/auth/users/{id}
+```
+```json
+{
+  "firstName": "Ramesh",
+  "email": "new@example.com",
+  "password": "newPass123",
+  "phoneNumber": "9876543210"
+}
+```
+All fields optional — only provided fields are updated.
+
+---
+
+## 2. Restaurants  `🔒 ADMIN for writes, Public for reads`
+
+### Create Restaurant
+```
+POST /api/restaurants
+```
+```json
+{
+  "name": "Spice Villa",
+  "address": "MG Road, Bangalore",
+  "isOpen": true
+}
+```
+
+### Update Restaurant
+```
+PUT /api/restaurants/{id}
+```
+```json
+{
+  "name": "Spice Villa",
+  "address": "MG Road, Pune",
+  "isOpen": true
+}
+```
+
+### Toggle Open/Closed
+```
+PATCH /api/restaurants/{id}/status
+```
+```json
+{
+  "isOpen": false
+}
+```
+
+### Get All Restaurants
+```
+GET /api/restaurants
+```
+
+### Get Restaurant By ID
+```
+GET /api/restaurants/{id}
+```
+
+### Delete Restaurant
+```
+DELETE /api/restaurants/{id}
+```
+
+### Add Menu Items (bulk)
+```
+POST /api/restaurants/{id}/menu
+```
+```json
 [
-    {
-    "name": "Chicken",
-    "price": 500,
-    "isAvailable": true
-    }
+  { "name": "Paneer Butter Masala", "price": 250, "isAvailable": true },
+  { "name": "Garlic Naan", "price": 50, "isAvailable": true }
 ]
-----
-GET - http://localhost:8084/api/restaurants/{id}/menu
-=====================
+```
 
+### Get Menu
+```
+GET /api/restaurants/{id}/menu
+```
 
-2. Orders
-=====================
-POST - http://localhost:8084/api/orders
+---
+
+## 3. Orders
+
+### Place Order  `🔒 USER`
+```
+POST /api/orders
+```
+```json
 {
-    "restaurantId": 1,
-    "userId": "user_123",
-    "deliveryAddress": "Flat 302, Green View Apartments, Whitefield, Bangalore",
-    "paymentMethod": "COD",
-    "items": [
-        {
-            "menuItemId": 1,
-            "quantity": 2
-        }
-    ]
+  "restaurantId": 1,
+  "deliveryAddress": "Flat 302, Green View Apartments, Whitefield, Bangalore",
+  "paymentMethod": "COD",
+  "items": [
+    { "menuItemId": 1, "quantity": 2 },
+    { "menuItemId": 3, "quantity": 1 }
+  ]
 }
-----
-POST - http://localhost:8084/api/orders/{orderId}/accept
-POST - http://localhost:8084/api/orders/{orderId}/reject
-POST - http://localhost:8084/api/orders/{orderId}/cancel
-GET - http://localhost:8084/api/orders/{orderId}
-=====================
+```
+Payment methods: `CARD` | `UPI` | `COD`
 
-3. Delivery
-=====================
-POST - http://localhost:8084/api/deliveries/assign?orderId={orderId}&deliveryPartnerId={partnerId}
-POST - http://localhost:8084/api/deliveries/{deliveryId}/status?status=ASSIGNED
-GET - http://localhost:8084/api/deliveries/order/{orderId}
-=====================
+### Get My Orders (paginated)  `🔒 USER, ADMIN`
+```
+GET /api/orders?page=0&size=10
+```
 
-4. Delivery Partners
-=====================
-POST - http://localhost:8084/api/partners
+### Get Order By ID  `🔒 USER, SUPPORT, ADMIN`
+```
+GET /api/orders/{orderId}
+```
+
+### Get Order Status History  `🔒 USER, SUPPORT, ADMIN`
+```
+GET /api/orders/{orderId}/history
+```
+Response:
+```json
+[
+  { "fromStatus": null, "toStatus": "PLACED", "changedBy": "user_1", "changedAt": "..." },
+  { "fromStatus": "PLACED", "toStatus": "ACCEPTED", "changedBy": "SYSTEM", "changedAt": "..." },
+  { "fromStatus": "ACCEPTED", "toStatus": "DISPATCHED", "changedBy": "SYSTEM", "changedAt": "..." }
+]
+```
+
+### Accept Order  `🔒 RESTAURANT_OWNER`
+```
+POST /api/orders/{orderId}/accept
+```
+
+### Reject Order  `🔒 RESTAURANT_OWNER`
+```
+POST /api/orders/{orderId}/reject
+```
+
+### Cancel Order  `🔒 USER`
+```
+POST /api/orders/{orderId}/cancel
+```
+
+---
+
+## 4. Delivery
+
+### Assign Delivery Partner  `🔒 ADMIN`
+```
+POST /api/deliveries/assign?orderId={orderId}&deliveryPartnerId={partnerId}
+```
+- Order must be in `ACCEPTED` status
+- Partner must be `AVAILABLE`
+- On success: order → `DISPATCHED`, partner → `ON_DELIVERY`
+
+### Update Delivery Status  `🔒 DELIVERY_PARTNER`
+```
+POST /api/deliveries/{deliveryId}/status?status={status}
+```
+Statuses: `PICKED_UP` | `DELIVERED` | `FAILED`
+
+Side effects:
+- `DELIVERED` → order moves to `DELIVERED`, partner moves to `AVAILABLE`
+- `FAILED` → order moves back to `ACCEPTED`, partner moves to `AVAILABLE`
+
+### Track Delivery  `🔒 USER, ADMIN, DELIVERY_PARTNER`
+```
+GET /api/deliveries/order/{orderId}
+```
+
+---
+
+## 5. Delivery Partners  `🔒 ADMIN`
+
+### Register Partner
+```
+POST /api/partners
+```
+```json
 {
-"name": "Rahul Sharma",
-"phone": "98765432013",
-"email": "rahul.sharma@example.com"
+  "name": "Rahul Sharma",
+  "phone": "9876543210",
+  "email": "rahul@example.com"
 }
-----
-PUT - http://localhost:8084/api/partners/{partnerId}/status
-{
-"status": "ON_DELIVERY"
-}
-----
-PUT - http://localhost:8084/api/partners/{partnerId}
-{
-"email" : "abc@gmail.com"
-}
-----
-GET - http://localhost:8084/api/partners/available
-GET - http://localhost:8084/api/partners/{partnerId}
-=====================
+```
 
-5. Feedback
-=====================
-POST - http://localhost:8084/api/feedback
-   {
-   "orderId": 12345,
-   "userId": 987,
-   "restaurantId": 55,
-   "deliveryPartnerId": 21,
-   "restaurantRating": 5,
-   "deliveryRating": 4,
-   "comments": "Food was tasty and delivery was on time."
-   }
-GET - http://localhost:8084/api/feedback/order/{orderId}
-=====================
-
-6. User
-=====================
-POST - http://localhost:8084/api/auth/register
-   {
-   "firstName": "Ramesh4",
-   "lastName": "Kumar",
-   "username": "ramesh123",
-   "phoneNumber": "9876543210",
-   "email": "ramesh4@example.com",
-   "password": "strongPass123",
-   "role" : "USER"
-   }
-----
-PUT - http://localhost:8084/api/auth/users/{userId}
+### Update Partner
+```
+PUT /api/partners/{id}
+```
+```json
 {
-"role" : "ADMIN"
+  "email": "newemail@example.com",
+  "phone": "9999999999"
 }
-----
-POST - http://localhost:8084/api/auth/login
+```
+
+### Update Partner Status
+```
+PUT /api/partners/{id}/status
+```
+```json
 {
-"email": "<email address>",
-"password": "<your password>"
+  "status": "OFFLINE"
 }
+```
+Statuses: `AVAILABLE` | `ON_DELIVERY` | `OFFLINE`
 
+### Get Available Partners (paginated)
+```
+GET /api/partners/available?page=0&size=10
+```
 
+### Get Partner By ID
+```
+GET /api/partners/{id}
+```
+
+### Delete Partner
+```
+DELETE /api/partners/{id}
+```
+
+---
+
+## 6. Feedback  `🔒 Authenticated`
+
+### Submit Feedback (one per order)
+```
+POST /api/feedback
+```
+```json
+{
+  "orderId": 1,
+  "userId": 2,
+  "restaurantId": 1,
+  "deliveryPartnerId": 3,
+  "restaurantRating": 5,
+  "deliveryRating": 4,
+  "comments": "Food was great and delivery was on time."
+}
+```
+- Ratings: 1–5
+- Comments: 5–100 characters
+- Submitting feedback automatically recomputes the restaurant's average rating
+
+### Get Feedback By Order
+```
+GET /api/feedback/order/{orderId}
+```
+
+---
+
+## 7. Swagger UI
+
+```
+GET http://localhost:8084/swagger-ui/index.html
+```
+All endpoints are documented with JWT bearer auth support. Click **Authorize** and paste your `accessToken`.

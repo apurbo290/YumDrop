@@ -1,0 +1,50 @@
+services:
+
+  mysql:
+    image: mysql:8.0
+    container_name: yumdrop-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_HOST: "%"
+      MYSQL_DATABASE: yumdrop
+    ports:
+      - "3306:3306"
+    volumes:
+      - yumdrop_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:latest
+    container_name: yumdrop-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - yumdrop_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: yumdrop-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"   # management UI → http://localhost:15672 (guest/guest)
+    volumes:
+      - yumdrop_rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  yumdrop_mysql_data:
+  yumdrop_redis_data:
+  yumdrop_rabbitmq_data:
